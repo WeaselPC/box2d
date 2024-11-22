@@ -7,3 +7,7 @@ settings.ini
 .DS_Store
 CMakeUserPresets.json
 .cache/
+bin
+bin-int
+bin
+bin-int
