@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="include">
@@ -87,5 +87,106 @@
     <ClInclude Include="src\world.h">
       <Filter>src</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\aabb.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\array.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bitset.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\body.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\broad_phase.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\constraint_graph.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\contact.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\contact_solver.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\distance.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\distance_joint.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\dynamic_tree.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\geometry.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hull.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\id_pool.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\island.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\joint.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\manifold.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\math_functions.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\motor_joint.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mouse_joint.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\prismatic_joint.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\revolute_joint.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\shape.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\solver.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\solver_set.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\stack_allocator.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\table.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\timer.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\weld_joint.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\wheel_joint.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\world.c">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

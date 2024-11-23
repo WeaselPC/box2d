@@ -1,7 +1,7 @@
 project "Box2D"
 	kind "StaticLib"
-	language "C++"
-	cppdialect "C++11"
+	language "C"
+	cdialect "C17"
 	staticruntime "off"
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
@@ -10,7 +10,7 @@ project "Box2D"
 	files
 	{
 		"src/**.h",
-		"src/**.cpp",
+		"src/**.c",
 		"include/**.h"
 	}
 
@@ -19,6 +19,10 @@ project "Box2D"
 		"include",
 		"src"
 	}
+
+	buildoptions { "/experimental:c11atomics" }
+
+	defines { "BOX2D_ENABLE_SIMD" }
 
 	filter "system:windows"
 		systemversion "latest"
