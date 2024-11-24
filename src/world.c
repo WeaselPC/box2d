@@ -801,7 +801,7 @@ static void b2DrawShape( b2DebugDraw* draw, b2Shape* shape, b2Transform xf, b2He
 			b2Capsule* capsule = &shape->capsule;
 			b2Vec2 p1 = b2TransformPoint( xf, capsule->center1 );
 			b2Vec2 p2 = b2TransformPoint( xf, capsule->center2 );
-			draw->DrawSolidCapsule( p1, p2, capsule->radius, color, draw->context );
+			draw->DrawSolidCapsule( p1, p2, capsule->radius, color, shape->userData );
 		}
 		break;
 
@@ -809,14 +809,14 @@ static void b2DrawShape( b2DebugDraw* draw, b2Shape* shape, b2Transform xf, b2He
 		{
 			b2Circle* circle = &shape->circle;
 			xf.p = b2TransformPoint( xf, circle->center );
-			draw->DrawSolidCircle( xf, circle->radius, color, draw->context );
+			draw->DrawSolidCircle( xf, circle->radius, color, shape->userData );
 		}
 		break;
 
 		case b2_polygonShape:
 		{
 			b2Polygon* poly = &shape->polygon;
-			draw->DrawSolidPolygon( xf, poly->vertices, poly->count, poly->radius, color, draw->context );
+			draw->DrawSolidPolygon( xf, poly->vertices, poly->count, poly->radius, color, shape->userData );
 		}
 		break;
 
@@ -825,7 +825,7 @@ static void b2DrawShape( b2DebugDraw* draw, b2Shape* shape, b2Transform xf, b2He
 			b2Segment* segment = &shape->segment;
 			b2Vec2 p1 = b2TransformPoint( xf, segment->point1 );
 			b2Vec2 p2 = b2TransformPoint( xf, segment->point2 );
-			draw->DrawSegment( p1, p2, color, draw->context );
+			draw->DrawSegment( p1, p2, color, shape->userData );
 		}
 		break;
 
@@ -834,9 +834,9 @@ static void b2DrawShape( b2DebugDraw* draw, b2Shape* shape, b2Transform xf, b2He
 			b2Segment* segment = &shape->chainSegment.segment;
 			b2Vec2 p1 = b2TransformPoint( xf, segment->point1 );
 			b2Vec2 p2 = b2TransformPoint( xf, segment->point2 );
-			draw->DrawSegment( p1, p2, color, draw->context );
-			draw->DrawPoint( p2, 4.0f, color, draw->context );
-			draw->DrawSegment( p1, b2Lerp( p1, p2, 0.1f ), b2_colorPaleGreen, draw->context );
+			draw->DrawSegment( p1, p2, color, shape->userData );
+			draw->DrawPoint( p2, 4.0f, color, shape->userData );
+			draw->DrawSegment( p1, b2Lerp( p1, p2, 0.1f ), b2_colorPaleGreen, shape->userData );
 		}
 		break;
 
@@ -929,7 +929,7 @@ static bool DrawQueryCallback( int proxyId, int shapeId, void* context )
 						 { aabb.upperBound.x, aabb.upperBound.y },
 						 { aabb.lowerBound.x, aabb.upperBound.y } };
 
-		draw->DrawPolygon( vs, 4, b2_colorGold, draw->context );
+		draw->DrawPolygon( vs, 4, b2_colorGold, shape->userData );
 	}
 
 	return true;

@@ -34,3 +34,4 @@ project "Box2D"
 	filter "configurations:Release"
 		runtime "Release"
 		optimize "on"
+		defines { "NDEBUG" }
