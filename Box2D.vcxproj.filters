@@ -45,6 +45,9 @@
     <ClInclude Include="src\broad_phase.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\constants.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="src\constraint_graph.h">
       <Filter>src</Filter>
     </ClInclude>

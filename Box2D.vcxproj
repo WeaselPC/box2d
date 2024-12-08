@@ -107,6 +107,7 @@
     <ClInclude Include="src\bitset.h" />
     <ClInclude Include="src\body.h" />
     <ClInclude Include="src\broad_phase.h" />
+    <ClInclude Include="src\constants.h" />
     <ClInclude Include="src\constraint_graph.h" />
     <ClInclude Include="src\contact.h" />
     <ClInclude Include="src\contact_solver.h" />
