@@ -33,7 +33,13 @@
     <ClInclude Include="src\aabb.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\arena_allocator.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="src\array.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\atomic.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\bitset.h">
@@ -72,6 +78,9 @@
     <ClInclude Include="src\joint.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\sensor.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="src\shape.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -79,9 +88,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\solver_set.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\stack_allocator.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\table.h">
@@ -93,6 +99,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\aabb.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\arena_allocator.c">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\array.c">
@@ -161,6 +170,9 @@
     <ClCompile Include="src\revolute_joint.c">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\sensor.c">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="src\shape.c">
       <Filter>src</Filter>
     </ClCompile>
@@ -168,9 +180,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\solver_set.c">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\stack_allocator.c">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\table.c">
