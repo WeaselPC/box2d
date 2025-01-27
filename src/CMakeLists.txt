@@ -1,8 +1,11 @@
 set(BOX2D_SOURCE_FILES
 	aabb.c
 	aabb.h
+	arena_allocator.c
+	arena_allocator.h
 	array.c
 	array.h
+	atomic.h
 	bitset.c
 	bitset.h
 	body.c
@@ -36,14 +39,14 @@ set(BOX2D_SOURCE_FILES
 	mouse_joint.c
 	prismatic_joint.c
 	revolute_joint.c
+	sensor.c
+	sensor.h
 	shape.c
 	shape.h
 	solver.c
 	solver.h
 	solver_set.c
 	solver_set.h
-	stack_allocator.c
-	stack_allocator.h
 	table.c
 	table.h
 	timer.c
@@ -113,10 +116,12 @@ if (BOX2D_PROFILE)
 endif()
 
 if (BOX2D_VALIDATE)
+	message(STATUS "Box2D validation ON")	
 	target_compile_definitions(box2d PRIVATE BOX2D_VALIDATE)
 endif()
 
 if (BOX2D_ENABLE_SIMD)
+	message(STATUS "Box2D SIMD enabled")	
 	target_compile_definitions(box2d PRIVATE BOX2D_ENABLE_SIMD)
 endif()
 
@@ -132,9 +137,6 @@ if (MSVC)
 
 	# Enable asserts in release with debug info
 	target_compile_definitions(box2d PUBLIC "$<$<CONFIG:RELWITHDEBINFO>:B2_ENABLE_ASSERT>")
-
-	# Atomics are still considered experimental in Visual Studio 17.8
-	target_compile_options(box2d PRIVATE /experimental:c11atomics)
 
 	# All warnings
 	target_compile_options(box2d PRIVATE /W4)
@@ -155,11 +157,15 @@ elseif (MINGW)
 	endif()
 elseif (APPLE)
 	message(STATUS "Box2D on Apple")
+	target_compile_options(box2d PRIVATE -Wmissing-prototypes)
 elseif (EMSCRIPTEN)
 	message(STATUS "Box2D on Emscripten")
-	target_compile_options(box2d PRIVATE -msimd128 -msse2)
+	if (BOX2D_ENABLE_SIMD)
+		target_compile_options(box2d PRIVATE -msimd128 -msse2)
+	endif()
 elseif (UNIX)
 	message(STATUS "Box2D using Unix")
+	target_compile_options(box2d PRIVATE -Wmissing-prototypes)
 	if ("${CMAKE_HOST_SYSTEM_PROCESSOR}" STREQUAL "aarch64")
 		# raspberry pi
 		# -mfpu=neon

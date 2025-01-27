@@ -13,6 +13,7 @@
 
 #include <GLFW/glfw3.h>
 #include <imgui.h>
+#include <stdio.h>
 #include <vector>
 
 class SensorFunnel : public Sample
@@ -91,11 +92,15 @@ public:
 			// }
 			// printf("};\n");
 
+			b2SurfaceMaterial material = {};
+			material.friction = 0.2f;
+
 			b2ChainDef chainDef = b2DefaultChainDef();
 			chainDef.points = points;
 			chainDef.count = count;
 			chainDef.isLoop = true;
-			chainDef.friction = 0.2f;
+			chainDef.materials = &material;
+			chainDef.materialCount = 1;
 			b2CreateChain( groundId, &chainDef );
 
 			float sign = 1.0f;
@@ -202,7 +207,7 @@ public:
 		else
 		{
 			Human* human = m_humans + index;
-			DestroyHuman(human);
+			DestroyHuman( human );
 		}
 
 		m_isSpawned[index] = false;
@@ -221,7 +226,7 @@ public:
 				else
 				{
 					DestroyHuman( m_humans + i );
-				}					
+				}
 
 				m_isSpawned[i] = false;
 			}
@@ -388,7 +393,6 @@ public:
 		m_visitorBodyId = b2CreateBody( m_worldId, &bodyDef );
 
 		b2ShapeDef shapeDef = b2DefaultShapeDef();
-		shapeDef.enableSensorEvents = true;
 
 		b2Circle circle = { { 0.0f, 0.0f }, 0.5f };
 		m_visitorShapeId = b2CreateCircleShape( m_visitorBodyId, &shapeDef, &circle );
@@ -489,6 +493,15 @@ static int sampleSensorBookendEvent = RegisterSample( "Events", "Sensor Bookend"
 class FootSensor : public Sample
 {
 public:
+	enum CollisionBits
+	{
+		GROUND = 0x00000001,
+		PLAYER = 0x00000002,
+		FOOT = 0x00000004,
+
+		ALL_BITS = ( ~0u )
+	};
+
 	explicit FootSensor( Settings& settings )
 		: Sample( settings )
 	{
@@ -504,7 +517,7 @@ public:
 
 			b2Vec2 points[20];
 			float x = 10.0f;
-			for (int i = 0; i < 20; ++i)
+			for ( int i = 0; i < 20; ++i )
 			{
 				points[i] = { x, 0.0f };
 				x -= 1.0f;
@@ -513,10 +526,11 @@ public:
 			b2ChainDef chainDef = b2DefaultChainDef();
 			chainDef.points = points;
 			chainDef.count = 20;
+			chainDef.filter.categoryBits = GROUND;
+			chainDef.filter.maskBits = FOOT | PLAYER;
 			chainDef.isLoop = false;
 
 			b2CreateChain( groundId, &chainDef );
-
 		}
 
 		{
@@ -526,18 +540,21 @@ public:
 			bodyDef.position = { 0.0f, 1.0f };
 			m_playerId = b2CreateBody( m_worldId, &bodyDef );
 			b2ShapeDef shapeDef = b2DefaultShapeDef();
+			shapeDef.filter.categoryBits = PLAYER;
+			shapeDef.filter.maskBits = GROUND;
 			shapeDef.friction = 0.3f;
 			b2Capsule capsule = { { 0.0f, -0.5f }, { 0.0f, 0.5f }, 0.5f };
 			b2CreateCapsuleShape( m_playerId, &shapeDef, &capsule );
 
 			b2Polygon box = b2MakeOffsetBox( 0.5f, 0.25f, { 0.0f, -1.0f }, b2Rot_identity );
+			shapeDef.filter.categoryBits = FOOT;
+			shapeDef.filter.maskBits = GROUND;
 			shapeDef.isSensor = true;
 			m_sensorId = b2CreatePolygonShape( m_playerId, &shapeDef, &box );
 		}
 
 		m_overlapCount = 0;
 	}
-
 
 	void Step( Settings& settings ) override
 	{
@@ -580,6 +597,18 @@ public:
 
 		g_draw.DrawString( 5, m_textLine, "count == %d", m_overlapCount );
 		m_textLine += m_textIncrement;
+
+		int capacity = b2Shape_GetSensorCapacity( m_sensorId );
+		m_overlaps.clear();
+		m_overlaps.resize( capacity );
+		int count = b2Shape_GetSensorOverlaps( m_sensorId, m_overlaps.data(), capacity );
+		for ( int i = 0; i < count; ++i )
+		{
+			b2ShapeId shapeId = m_overlaps[i];
+			b2AABB aabb = b2Shape_GetAABB( shapeId );
+			b2Vec2 point = b2AABB_Center( aabb );
+			g_draw.DrawPoint( point, 10.0f, b2_colorWhite );
+		}
 	}
 
 	static Sample* Create( Settings& settings )
@@ -589,11 +618,11 @@ public:
 
 	b2BodyId m_playerId;
 	b2ShapeId m_sensorId;
+	std::vector<b2ShapeId> m_overlaps;
 	int m_overlapCount;
 };
 
 static int sampleCharacterSensor = RegisterSample( "Events", "Foot Sensor", FootSensor::Create );
-
 
 struct BodyUserData
 {
@@ -681,7 +710,7 @@ public:
 		b2BodyDef bodyDef = b2DefaultBodyDef();
 		bodyDef.type = b2_dynamicBody;
 		bodyDef.position = { RandomFloatRange( -38.0f, 38.0f ), RandomFloatRange( -38.0f, 38.0f ) };
-		bodyDef.rotation = b2MakeRot( RandomFloatRange( -b2_pi, b2_pi ) );
+		bodyDef.rotation = b2MakeRot( RandomFloatRange( -B2_PI, B2_PI ) );
 		bodyDef.linearVelocity = { RandomFloatRange( -5.0f, 5.0f ), RandomFloatRange( -5.0f, 5.0f ) };
 		bodyDef.angularVelocity = RandomFloatRange( -1.0f, 1.0f );
 		bodyDef.gravityScale = 0.0f;
@@ -761,6 +790,7 @@ public:
 
 		std::vector<b2ContactData> contactData;
 
+		// Process contact begin touch events.
 		b2ContactEvents contactEvents = b2World_GetContactEvents( m_worldId );
 		for ( int i = 0; i < contactEvents.beginCount; ++i )
 		{
@@ -768,41 +798,72 @@ public:
 			b2BodyId bodyIdA = b2Shape_GetBody( event.shapeIdA );
 			b2BodyId bodyIdB = b2Shape_GetBody( event.shapeIdB );
 
+			// The begin touch events have the contact manifolds, but the impulses are zero. This is because the manifolds
+			// are gathered before the contact solver is run.
+
+			// We can get the final contact data from the shapes. The manifold is shared by the two shapes, so we just need the
+			// contact data from one of the shapes. Choose the one with the smallest number of contacts.
+
 			int capacityA = b2Shape_GetContactCapacity( event.shapeIdA );
-			contactData.resize( capacityA );
-			int countA = b2Shape_GetContactData( event.shapeIdA, contactData.data(), capacityA );
-			assert( countA >= 1 );
+			int capacityB = b2Shape_GetContactCapacity( event.shapeIdB );
 
-			for ( int j = 0; j < countA; ++j )
+			if ( capacityA < capacityB )
 			{
-				b2Manifold manifold = contactData[j].manifold;
-				b2Vec2 normal = manifold.normal;
-				assert( b2AbsFloat( b2Length( normal ) - 1.0f ) < 4.0f * FLT_EPSILON );
+				contactData.resize( capacityA );
 
-				for ( int k = 0; k < manifold.pointCount; ++k )
+				// The count may be less than the capacity
+				int countA = b2Shape_GetContactData( event.shapeIdA, contactData.data(), capacityA );
+				assert( countA >= 1 );
+
+				for ( int j = 0; j < countA; ++j )
 				{
-					b2ManifoldPoint point = manifold.points[k];
-					g_draw.DrawSegment( point.point, point.point + 4.0f * normal, b2_colorBlueViolet );
-					g_draw.DrawPoint( point.point, 10.0f, b2_colorWhite );
+					b2ShapeId idA = contactData[j].shapeIdA;
+					b2ShapeId idB = contactData[j].shapeIdB;
+					if ( B2_ID_EQUALS( idA, event.shapeIdB ) || B2_ID_EQUALS( idB, event.shapeIdB ) )
+					{
+						assert( B2_ID_EQUALS( idA, event.shapeIdA ) || B2_ID_EQUALS( idB, event.shapeIdA ) );
+
+						b2Manifold manifold = contactData[j].manifold;
+						b2Vec2 normal = manifold.normal;
+						assert( b2AbsFloat( b2Length( normal ) - 1.0f ) < 4.0f * FLT_EPSILON );
+
+						for ( int k = 0; k < manifold.pointCount; ++k )
+						{
+							b2ManifoldPoint point = manifold.points[k];
+							g_draw.DrawSegment( point.point, point.point + point.maxNormalImpulse * normal, b2_colorBlueViolet );
+							g_draw.DrawPoint( point.point, 10.0f, b2_colorWhite );
+						}
+					}
 				}
 			}
-
-			int capacityB = b2Shape_GetContactCapacity( event.shapeIdB );
-			contactData.resize( capacityB );
-			int countB = b2Shape_GetContactData( event.shapeIdB, contactData.data(), capacityB );
-			assert( countB >= 1 );
-
-			for ( int j = 0; j < countB; ++j )
+			else
 			{
-				b2Manifold manifold = contactData[j].manifold;
-				b2Vec2 normal = manifold.normal;
-				assert( b2AbsFloat( b2Length( normal ) - 1.0f ) < 4.0f * FLT_EPSILON );
+				contactData.resize( capacityB );
 
-				for ( int k = 0; k < manifold.pointCount; ++k )
+				// The count may be less than the capacity
+				int countB = b2Shape_GetContactData( event.shapeIdB, contactData.data(), capacityB );
+				assert( countB >= 1 );
+
+				for ( int j = 0; j < countB; ++j )
 				{
-					b2ManifoldPoint point = manifold.points[k];
-					g_draw.DrawSegment( point.point, point.point + 4.0f * normal, b2_colorYellowGreen );
-					g_draw.DrawPoint( point.point, 10.0f, b2_colorWhite );
+					b2ShapeId idA = contactData[j].shapeIdA;
+					b2ShapeId idB = contactData[j].shapeIdB;
+
+					if ( B2_ID_EQUALS( idA, event.shapeIdA ) || B2_ID_EQUALS( idB, event.shapeIdA ) )
+					{
+						assert( B2_ID_EQUALS( idA, event.shapeIdB ) || B2_ID_EQUALS( idB, event.shapeIdB ) );
+
+						b2Manifold manifold = contactData[j].manifold;
+						b2Vec2 normal = manifold.normal;
+						assert( b2AbsFloat( b2Length( normal ) - 1.0f ) < 4.0f * FLT_EPSILON );
+
+						for ( int k = 0; k < manifold.pointCount; ++k )
+						{
+							b2ManifoldPoint point = manifold.points[k];
+							g_draw.DrawSegment( point.point, point.point + point.maxNormalImpulse * normal, b2_colorYellowGreen );
+							g_draw.DrawPoint( point.point, 10.0f, b2_colorWhite );
+						}
+					}
 				}
 			}
 
@@ -1259,10 +1320,10 @@ public:
 			b2ShapeDef shapeDef = b2DefaultShapeDef();
 			shapeDef.friction = 0.1f;
 
-			b2Polygon box = b2MakeOffsetBox( 12.0f, 0.1f, { -10.0f, -0.1f }, b2MakeRot( -0.15f * b2_pi ) );
+			b2Polygon box = b2MakeOffsetBox( 12.0f, 0.1f, { -10.0f, -0.1f }, b2MakeRot( -0.15f * B2_PI ) );
 			b2CreatePolygonShape( groundId, &shapeDef, &box );
 
-			box = b2MakeOffsetBox( 12.0f, 0.1f, { 10.0f, -0.1f }, b2MakeRot( 0.15f * b2_pi ) );
+			box = b2MakeOffsetBox( 12.0f, 0.1f, { 10.0f, -0.1f }, b2MakeRot( 0.15f * B2_PI ) );
 			b2CreatePolygonShape( groundId, &shapeDef, &box );
 
 			shapeDef.restitution = 0.8f;
@@ -1409,3 +1470,190 @@ public:
 };
 
 static int sampleBodyMove = RegisterSample( "Events", "Body Move", BodyMove::Create );
+
+class SensorTypes : public Sample
+{
+public:
+	enum CollisionBits
+	{
+		GROUND = 0x00000001,
+		SENSOR = 0x00000002,
+		DEFAULT = 0x00000004,
+
+		ALL_BITS = ( ~0u )
+	};
+
+	explicit SensorTypes( Settings& settings )
+		: Sample( settings )
+	{
+		if ( settings.restart == false )
+		{
+			g_camera.m_center = { 0.0f, 3.0f };
+			g_camera.m_zoom = 4.5f;
+		}
+
+		{
+			b2BodyDef bodyDef = b2DefaultBodyDef();
+			bodyDef.name = "ground";
+
+			b2BodyId groundId = b2CreateBody( m_worldId, &bodyDef );
+			b2ShapeDef shapeDef = b2DefaultShapeDef();
+			shapeDef.filter.categoryBits = GROUND;
+			shapeDef.filter.maskBits = SENSOR | DEFAULT;
+
+			b2Segment groundSegment = { { -6.0f, 0.0f }, { 6.0f, 0.0f } };
+			b2CreateSegmentShape( groundId, &shapeDef, &groundSegment );
+
+			groundSegment = { { -6.0f, 0.0f }, { -6.0f, 4.0f } };
+			b2CreateSegmentShape( groundId, &shapeDef, &groundSegment );
+
+			groundSegment = { { 6.0f, 0.0f }, { 6.0f, 4.0f } };
+			b2CreateSegmentShape( groundId, &shapeDef, &groundSegment );
+		}
+
+		{
+			b2BodyDef bodyDef = b2DefaultBodyDef();
+			bodyDef.name = "static sensor";
+			bodyDef.type = b2_staticBody;
+			bodyDef.position = { -3.0f, 0.8f };
+			b2BodyId bodyId = b2CreateBody( m_worldId, &bodyDef );
+
+			b2ShapeDef shapeDef = b2DefaultShapeDef();
+			shapeDef.filter.categoryBits = SENSOR;
+			shapeDef.isSensor = true;
+			b2Polygon box = b2MakeSquare( 1.0f );
+			m_staticSensorId = b2CreatePolygonShape( bodyId, &shapeDef, &box );
+		}
+
+		{
+			b2BodyDef bodyDef = b2DefaultBodyDef();
+			bodyDef.name = "kinematic sensor";
+			bodyDef.type = b2_kinematicBody;
+			bodyDef.position = { 0.0f, 0.0f };
+			bodyDef.linearVelocity = { 0.0f, 1.0f };
+			m_kinematicBodyId = b2CreateBody( m_worldId, &bodyDef );
+
+			b2ShapeDef shapeDef = b2DefaultShapeDef();
+			shapeDef.filter.categoryBits = SENSOR;
+			shapeDef.isSensor = true;
+			b2Polygon box = b2MakeSquare( 1.0f );
+			m_kinematicSensorId = b2CreatePolygonShape( m_kinematicBodyId, &shapeDef, &box );
+		}
+
+		{
+			b2BodyDef bodyDef = b2DefaultBodyDef();
+			bodyDef.name = "dynamic sensor";
+			bodyDef.type = b2_dynamicBody;
+			bodyDef.position = { 3.0f, 1.0f };
+			b2BodyId bodyId = b2CreateBody( m_worldId, &bodyDef );
+
+			b2ShapeDef shapeDef = b2DefaultShapeDef();
+			shapeDef.filter.categoryBits = SENSOR;
+			shapeDef.isSensor = true;
+			b2Polygon box = b2MakeSquare( 1.0f );
+			m_dynamicSensorId = b2CreatePolygonShape( bodyId, &shapeDef, &box );
+
+			// Add some real collision so the dynamic body is valid
+			shapeDef.filter.categoryBits = DEFAULT;
+			shapeDef.isSensor = false;
+			box = b2MakeSquare( 0.8f );
+			b2CreatePolygonShape( bodyId, &shapeDef, &box );
+		}
+
+		{
+			b2BodyDef bodyDef = b2DefaultBodyDef();
+			bodyDef.name = "ball_01";
+			bodyDef.position = { -5.0f, 1.0f };
+			bodyDef.type = b2_dynamicBody;
+
+			b2BodyId bodyId = b2CreateBody( m_worldId, &bodyDef );
+
+			b2ShapeDef shapeDef = b2DefaultShapeDef();
+			shapeDef.filter.categoryBits = DEFAULT;
+			shapeDef.filter.maskBits = GROUND | DEFAULT | SENSOR;
+
+			b2Circle circle = { { 0.0f, 0.0f }, 0.5f };
+			b2CreateCircleShape( bodyId, &shapeDef, &circle );
+		}
+	}
+
+	void PrintOverlaps( b2ShapeId sensorShapeId, const char* prefix )
+	{
+		char buffer[256] = {};
+
+		// Determine the necessary capacity
+		int capacity = b2Shape_GetSensorCapacity( sensorShapeId );
+		m_overlaps.resize( capacity );
+
+		// Get all overlaps and record the actual count
+		int count = b2Shape_GetSensorOverlaps( sensorShapeId, m_overlaps.data(), capacity );
+		m_overlaps.resize( count );
+
+		int start = snprintf( buffer, sizeof( buffer ), "%s: ", prefix );
+		for ( int i = 0; i < count && start < sizeof( buffer ); ++i )
+		{
+			b2ShapeId visitorId = m_overlaps[i];
+			if ( b2Shape_IsValid( visitorId ) == false )
+			{
+				continue;
+			}
+
+			b2BodyId bodyId = b2Shape_GetBody( visitorId );
+			const char* name = b2Body_GetName( bodyId );
+			if ( name == nullptr )
+			{
+				continue;
+			}
+
+			// todo fix this
+			start += snprintf( buffer + start, sizeof( buffer ) - start, "%s, ", name );
+		}
+
+		DrawTextLine( buffer );
+	}
+
+	void Step( Settings& settings ) override
+	{
+		b2Vec2 position = b2Body_GetPosition( m_kinematicBodyId );
+		if (position.y < 0.0f)
+		{
+			b2Body_SetLinearVelocity( m_kinematicBodyId, { 0.0f, 1.0f } );
+			//b2Body_SetKinematicTarget( m_kinematicBodyId );
+		}
+		else if (position.y > 3.0f)
+		{
+			b2Body_SetLinearVelocity( m_kinematicBodyId, { 0.0f, -1.0f } );
+		}
+
+		Sample::Step( settings );
+
+		PrintOverlaps( m_staticSensorId, "static" );
+		PrintOverlaps( m_kinematicSensorId, "kinematic" );
+		PrintOverlaps( m_dynamicSensorId, "dynamic" );
+
+		b2Vec2 origin = { 5.0f, 1.0f };
+		b2Vec2 translation = { -10.0f, 0.0f };
+		b2RayResult result = b2World_CastRayClosest( m_worldId, origin, translation, b2DefaultQueryFilter() );
+		g_draw.DrawSegment( origin, origin + translation, b2_colorDimGray );
+
+		if (result.hit)
+		{
+			g_draw.DrawPoint( result.point, 10.0f, b2_colorCyan );
+		}
+	}
+
+	static Sample* Create( Settings& settings )
+	{
+		return new SensorTypes( settings );
+	}
+
+	b2ShapeId m_staticSensorId;
+	b2ShapeId m_kinematicSensorId;
+	b2ShapeId m_dynamicSensorId;
+
+	b2BodyId m_kinematicBodyId;
+
+	std::vector<b2ShapeId> m_overlaps;
+};
+
+static int sampleSensorTypes = RegisterSample( "Events", "Sensor Types", SensorTypes::Create );

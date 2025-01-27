@@ -8,11 +8,9 @@
 #include "broad_phase.h"
 #include "constraint_graph.h"
 #include "id_pool.h"
-#include "stack_allocator.h"
+#include "arena_allocator.h"
 
 #include "box2d/types.h"
-
-typedef struct b2ContactSim b2ContactSim;
 
 enum b2SetType
 {
@@ -41,12 +39,11 @@ typedef struct b2TaskContext
 
 } b2TaskContext;
 
-/// The world class manages all physics entities, dynamic simulation,
-/// and asynchronous queries. The world also contains efficient memory
-/// management facilities.
+// The world struct manages all physics entities, dynamic simulation,  and asynchronous queries.
+// The world also contains efficient memory management facilities.
 typedef struct b2World
 {
-	b2StackAllocator stackAllocator;
+	b2ArenaAllocator stackAllocator;
 	b2BroadPhase broadPhase;
 	b2ConstraintGraph constraintGraph;
 
@@ -95,8 +92,12 @@ typedef struct b2World
 	b2ShapeArray shapes;
 	b2ChainShapeArray chainShapes;
 
+	// This is a dense array of sensor data.
+	b2SensorArray sensors;
+
 	// Per thread storage
 	b2TaskContextArray taskContexts;
+	b2SensorTaskContextArray sensorTaskContexts;
 
 	b2BodyMoveEventArray bodyMoveEvents;
 	b2SensorBeginTouchEventArray sensorBeginEvents;
@@ -129,17 +130,17 @@ typedef struct b2World
 	b2Vec2 gravity;
 	float hitEventThreshold;
 	float restitutionThreshold;
-	float maxLinearVelocity;
-	float contactPushoutVelocity;
+	float maxLinearSpeed;
+	float contactMaxPushSpeed;
 	float contactHertz;
 	float contactDampingRatio;
 	float jointHertz;
 	float jointDampingRatio;
 
-	b2MixingRule frictionMixingRule;
-	b2MixingRule restitutionMixingRule;
+	b2FrictionCallback* frictionCallback;
+	b2RestitutionCallback* restitutionCallback;
 
-	uint16_t revision;
+	uint16_t generation;
 
 	b2Profile profile;
 

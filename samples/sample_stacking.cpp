@@ -32,16 +32,17 @@ public:
 
 		float groundWidth = 66.0f * extent;
 		b2ShapeDef shapeDef = b2DefaultShapeDef();
-		shapeDef.friction = 0.5f;
+		//shapeDef.friction = 0.5f;
 
 		b2Segment segment = { { -0.5f * 2.0f * groundWidth, 0.0f }, { 0.5f * 2.0f * groundWidth, 0.0f } };
 		b2CreateSegmentShape( groundId, &shapeDef, &segment );
 		bodyDef.type = b2_dynamicBody;
 
 		b2Polygon box = b2MakeBox( extent, extent );
-		bodyDef.position = { 0.0f, 4.0f };
-		b2BodyId bodyId = b2CreateBody( m_worldId, &bodyDef );
-		b2CreatePolygonShape( bodyId, &shapeDef, &box );
+		bodyDef.position = { 0.0f, 1.0f };
+		bodyDef.linearVelocity = { 5.0f, 0.0f };
+		m_bodyId = b2CreateBody( m_worldId, &bodyDef );
+		b2CreatePolygonShape( m_bodyId, &shapeDef, &box );
 	}
 
 	void Step( Settings& settings ) override
@@ -49,12 +50,17 @@ public:
 		Sample::Step( settings );
 
 		// g_draw.DrawCircle({0.0f, 2.0f}, 1.0f, b2_colorWhite);
+
+		b2Vec2 position = b2Body_GetPosition( m_bodyId );
+		DrawTextLine( "(x, y) = (%.2g, %.2g)", position.x, position.y );
 	}
 
 	static Sample* Create( Settings& settings )
 	{
 		return new SingleBox( settings );
 	}
+
+	b2BodyId m_bodyId;
 };
 
 static int sampleSingleBox = RegisterSample( "Stacking", "Single Box", SingleBox::Create );
@@ -201,7 +207,7 @@ public:
 			}
 		}
 
-		b2Circle circle = { 0 };
+		b2Circle circle = { };
 		circle.radius = 0.5f;
 
 		b2Polygon box = b2MakeBox( 0.5f, 0.5f );
@@ -425,13 +431,14 @@ public:
 
 		b2ShapeDef shapeDef = b2DefaultShapeDef();
 		shapeDef.enableHitEvents = true;
+		shapeDef.rollingResistance = 0.2f;
 
 		b2BodyDef bodyDef = b2DefaultBodyDef();
 		bodyDef.type = b2_dynamicBody;
 
 		float y = 0.5f;
 
-		for ( int i = 0; i < 8; ++i )
+		for ( int i = 0; i < 1; ++i )
 		{
 			bodyDef.position.y = y;
 
@@ -464,7 +471,7 @@ public:
 			m_events.push_back( { indexA, indexB } );
 		}
 
-		int eventCount = m_events.size();
+		int eventCount = (int)m_events.size();
 		for ( int i = 0; i < eventCount; ++i )
 		{
 			g_draw.DrawString( 5, m_textLine, "%d, %d", m_events[i].indexA, m_events[i].indexB );
@@ -883,9 +890,9 @@ public:
 		float cardHeight = 0.2f;
 		float cardThickness = 0.001f;
 
-		float angle0 = 25.0f * b2_pi / 180.0f;
-		float angle1 = -25.0f * b2_pi / 180.0f;
-		float angle2 = 0.5f * b2_pi;
+		float angle0 = 25.0f * B2_PI / 180.0f;
+		float angle1 = -25.0f * B2_PI / 180.0f;
+		float angle2 = 0.5f * B2_PI;
 
 		b2Polygon cardBox = b2MakeBox( cardThickness, cardHeight );
 		bodyDef.type = b2_dynamicBody;

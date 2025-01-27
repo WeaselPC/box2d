@@ -86,6 +86,7 @@ static void FinishTask( void* userTask, void* userContext )
 	enkiWaitForTaskSet( scheduler, task );
 }
 
+// todo_erin move this to shared
 static void TiltedStacks( int testIndex, int workerCount )
 {
 	scheduler = enkiNewTaskScheduler();
@@ -233,8 +234,8 @@ static int CrossPlatformTest(void)
 
 	b2RevoluteJointDef jointDef = b2DefaultRevoluteJointDef();
 	jointDef.enableLimit = true;
-	jointDef.lowerAngle = -0.1f * b2_pi;
-	jointDef.upperAngle = 0.2f * b2_pi;
+	jointDef.lowerAngle = -0.1f * B2_PI;
+	jointDef.upperAngle = 0.2f * B2_PI;
 	jointDef.enableSpring = true;
 	jointDef.hertz = 0.5f;
 	jointDef.dampingRatio = 0.5f;
@@ -325,8 +326,8 @@ static int CrossPlatformTest(void)
 	}
 
 	ENSURE( stepCount < maxSteps );
-	ENSURE( sleepStep == 282 );
-	ENSURE( hash == 0x7efc22e7 );
+	ENSURE( sleepStep == 263 );
+	ENSURE( hash == 0x7de58fbe );
 
 	free( bodies );
 
