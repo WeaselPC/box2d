@@ -1,37 +1,41 @@
 project "Box2D"
-	kind "StaticLib"
-	language "C"
-	cdialect "C17"
-	staticruntime "off"
+   kind        "StaticLib"
+   language    "C"
+   cdialect    "C17"
+   staticruntime "off"
 
-	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
-	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+   targetdir   ("bin/"    .. outputdir .. "/%{prj.name}")
+   objdir      ("bin-int/".. outputdir .. "/%{prj.name}")
 
-	files
-	{
-		"src/**.h",
-		"src/**.c",
-		"include/**.h"
-	}
+   files {
+      "src/**.h",
+      "src/**.c",
+      "include/**.h"
+   }
 
-	includedirs
-	{
-		"include",
-		"src"
-	}
+   includedirs {
+      "include",
+      "src"
+   }
 
-	buildoptions { "/experimental:c11atomics" }
+   filter { "system:windows" }
+      buildoptions { "/experimental:c11atomics" }
+      systemversion "latest"
 
-	defines { "BOX2D_ENABLE_SIMD" }
+   filter { "system:linux" }
+      pic "On"
+      defines { "_POSIX_C_SOURCE=199309L" }
+      links   { "pthread", "m", "rt" } 
+   filter {}
 
-	filter "system:windows"
-		systemversion "latest"
+   defines { "BOX2D_ENABLE_SIMD" }
 
-	filter "configurations:Debug"
-		runtime "Debug"
-		symbols "on"
+   filter { "configurations:Debug" }
+      runtime "Debug"
+      symbols "On"
 
-	filter "configurations:Release"
-		runtime "Release"
-		optimize "on"
-		defines { "NDEBUG" }
+   filter { "configurations:Release" }
+      runtime "Release"
+      optimize "On"
+      defines { "NDEBUG" }
+   filter {}
