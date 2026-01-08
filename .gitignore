@@ -12,3 +12,4 @@ bin
 bin-int
 bin
 bin-int
+*.vcxproj.user
