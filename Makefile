@@ -60,6 +60,15 @@ ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -O2 -fPIC -std=c17
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -O2 -fPIC
 ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64 -s
 
+else ifeq ($(config),dist_x64)
+TARGETDIR = bin/Dist-linux-x86_64/Box2D
+TARGET = $(TARGETDIR)/libBox2D.a
+OBJDIR = bin-int/Dist-linux-x86_64/Box2D
+DEFINES += -D_POSIX_C_SOURCE=199309L -DBOX2D_ENABLE_SIMD
+ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -flto -O2 -fPIC -g -std=c17
+ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -flto -O2 -fPIC -g
+ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64 -flto
+
 endif
 
 # Per File Configurations
